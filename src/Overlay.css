@@ -1,0 +1,90 @@
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: transparent;
+}
+
+body {
+  overflow: hidden;
+}
+
+/* ========================================
+   オーバーレイ全体
+======================================== */
+
+.overlay {
+  position: relative;
+
+  width: 100vw;
+  height: 100vh;
+
+  background: transparent;
+
+  overflow: hidden;
+}
+
+/* ========================================
+   動画
+======================================== */
+
+.overlay-video {
+  position: absolute;
+
+  left: 0;
+  top: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  pointer-events: none;
+
+  z-index: 1;
+}
+
+/* ========================================
+   結果文字
+======================================== */
+
+.overlay-result {
+  position: absolute;
+
+  font-family:
+    "Meiryo",
+    "Yu Gothic",
+    sans-serif;
+
+  font-weight: normal;
+
+  color: black;
+
+  white-space: nowrap;
+
+  opacity: 0;
+
+  transition:
+    opacity 0.2s;
+
+  user-select: none;
+
+  pointer-events: none;
+
+  z-index: 2;
+
+  /*
+   * 操作画面と同じ座標基準にする
+   */
+
+  box-sizing: border-box;
+}
+
+.overlay-result.visible {
+  opacity: 1;
+}

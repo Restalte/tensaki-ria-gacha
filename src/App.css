@@ -1,0 +1,692 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+html,
+body {
+  overflow: hidden;
+}
+
+body {
+  background: #111;
+  color: #fff;
+  font-family: Arial, "Yu Gothic", Meiryo, sans-serif;
+}
+
+#root {
+  overflow: hidden;
+}
+
+/* ================================
+   アプリ全体
+================================ */
+
+.app {
+  width: 100%;
+  height: 100vh;
+
+  overflow: hidden;
+
+  background: #111;
+}
+
+/* ================================
+   実際にスクロールする場所
+================================ */
+
+.screen-wrapper {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+
+  align-items: flex-start;
+
+  justify-content: center;
+
+  gap: 30px;
+
+  padding: 30px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  scrollbar-width: auto;
+}
+
+/* Chrome / Edge */
+
+.screen-wrapper::-webkit-scrollbar {
+  width: 14px;
+}
+
+.screen-wrapper::-webkit-scrollbar-track {
+  background: #111;
+}
+
+.screen-wrapper::-webkit-scrollbar-thumb {
+  background: #555;
+
+  border-radius: 7px;
+}
+
+.screen-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* ================================
+   左右の画面
+================================ */
+
+.screen-section {
+  flex: 0 0 calc(50% - 15px);
+
+  width: calc(50% - 15px);
+
+  min-width: 0;
+
+  background: #222;
+
+  border-radius: 12px;
+
+  padding: 20px;
+
+  overflow: visible;
+}
+
+.screen-section h2 {
+  margin: 0 0 15px;
+
+  color: #fff;
+
+  font-size: 22px;
+
+  font-weight: normal;
+}
+
+/* ================================
+   ガチャ画面
+================================ */
+
+.gacha-container {
+  position: relative;
+
+  width: 100%;
+
+  aspect-ratio: 16 / 9;
+
+  background: #000;
+
+  border-radius: 8px;
+
+  overflow: hidden;
+
+  user-select: none;
+}
+
+.gacha-video {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  background: #000;
+}
+
+/* ================================
+   結果文字
+================================ */
+
+.result-text {
+  position: absolute;
+
+  z-index: 20;
+
+  color: #000;
+
+  white-space: nowrap;
+
+  opacity: 0;
+
+  cursor: grab;
+
+  user-select: none;
+
+  pointer-events: auto;
+
+  font-weight: normal;
+
+  transition: opacity 0.15s ease;
+}
+
+.result-text.visible {
+  opacity: 1;
+}
+
+.result-text.dragging {
+  cursor: grabbing;
+}
+
+/* ================================
+   ガチャ結果設定
+================================ */
+
+.result-settings {
+  width: 100%;
+
+  margin-top: 20px;
+
+  padding: 18px;
+
+  background: #181818;
+
+  border: 1px solid #333;
+
+  border-radius: 10px;
+
+  overflow: visible;
+}
+
+.result-settings h3 {
+  margin: 0 0 15px;
+
+  color: #fff;
+
+  font-size: 18px;
+
+  font-weight: normal;
+}
+
+.result-total {
+  display: flex;
+
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  gap: 8px;
+
+  margin-bottom: 15px;
+
+  color: #fff;
+
+  font-size: 14px;
+}
+
+.result-total strong {
+  font-size: 16px;
+
+  font-weight: normal;
+}
+
+.probability-ok {
+  padding: 3px 8px;
+
+  background: #333;
+
+  border-radius: 4px;
+
+  color: #fff;
+
+  font-size: 12px;
+}
+
+.probability-error {
+  padding: 3px 8px;
+
+  background: #442222;
+
+  border-radius: 4px;
+
+  color: #ff9999;
+
+  font-size: 12px;
+}
+
+/* ================================
+   結果設定1行
+================================ */
+
+.result-setting-row {
+  display: flex;
+
+  align-items: center;
+
+  width: 100%;
+
+  min-height: 42px;
+
+  margin-bottom: 8px;
+
+  gap: 8px;
+}
+
+.result-number {
+  flex: 0 0 25px;
+
+  color: #aaa;
+
+  font-size: 13px;
+
+  text-align: center;
+}
+
+.result-name-input {
+  flex: 1;
+
+  min-width: 0;
+
+  height: 38px;
+
+  padding: 0 10px;
+
+  background: #111;
+
+  border: 1px solid #444;
+
+  border-radius: 5px;
+
+  outline: none;
+
+  color: #fff;
+
+  font-size: 14px;
+}
+
+.result-name-input:focus {
+  border-color: #777;
+}
+
+.result-probability-input {
+  flex: 0 0 75px;
+
+  width: 75px;
+
+  height: 38px;
+
+  padding: 0 8px;
+
+  background: #111;
+
+  border: 1px solid #444;
+
+  border-radius: 5px;
+
+  outline: none;
+
+  color: #fff;
+
+  font-size: 14px;
+
+  text-align: right;
+}
+
+.percent-symbol {
+  flex: 0 0 15px;
+
+  color: #aaa;
+
+  font-size: 14px;
+}
+
+.result-delete-button {
+  flex: 0 0 auto;
+
+  height: 38px;
+
+  padding: 0 10px;
+
+  background: #292929;
+
+  border: 1px solid #444;
+
+  border-radius: 5px;
+
+  color: #fff;
+
+  cursor: pointer;
+}
+
+.result-delete-button:hover {
+  background: #383838;
+}
+
+.result-delete-button:disabled {
+  opacity: 0.3;
+
+  cursor: not-allowed;
+}
+
+/* ================================
+   結果追加
+================================ */
+
+.result-add-button {
+  width: 100%;
+
+  height: 40px;
+
+  margin-top: 8px;
+
+  background: #252525;
+
+  border: 1px solid #444;
+
+  border-radius: 5px;
+
+  color: #fff;
+
+  cursor: pointer;
+
+  font-size: 14px;
+}
+
+.result-add-button:hover {
+  background: #333;
+}
+
+.result-add-button:disabled {
+  opacity: 0.4;
+
+  cursor: not-allowed;
+}
+
+.result-count {
+  margin-top: 8px;
+
+  color: #888;
+
+  font-size: 12px;
+
+  text-align: right;
+}
+
+/* ================================
+   設定
+================================ */
+
+.settings {
+  width: 100%;
+
+  margin-top: 20px;
+
+  padding: 15px;
+
+  background: #181818;
+
+  border-radius: 8px;
+
+  overflow: visible;
+}
+
+.settings label {
+  display: flex;
+
+  align-items: center;
+
+  width: 100%;
+
+  margin-bottom: 15px;
+}
+
+.setting-label {
+  flex: 0 0 90px;
+
+  color: #fff;
+
+  font-size: 14px;
+}
+
+.settings input[type="range"] {
+  flex: 1;
+
+  min-width: 0;
+
+  margin: 0 12px;
+}
+
+.setting-value {
+  flex: 0 0 55px;
+
+  color: #aaa;
+
+  font-size: 13px;
+
+  text-align: right;
+}
+
+/* ================================
+   初期化
+================================ */
+
+.reset-button {
+  width: 100%;
+
+  height: 38px;
+
+  margin-top: 5px;
+
+  background: #252525;
+
+  border: 1px solid #444;
+
+  border-radius: 5px;
+
+  color: #fff;
+
+  cursor: pointer;
+
+  font-size: 14px;
+}
+
+.reset-button:hover {
+  background: #333;
+}
+
+/* ================================
+   座標
+================================ */
+
+.position-info {
+  width: 100%;
+
+  margin-top: 10px;
+
+  color: #888;
+
+  font-size: 12px;
+
+  text-align: center;
+}
+
+/* ================================
+   ガチャボタン
+================================ */
+
+.gacha-button {
+  display: block;
+
+  width: 100%;
+
+  height: 60px;
+
+  margin-top: 20px;
+
+  background: #ff69b4;
+
+  border: none;
+
+  border-radius: 8px;
+
+  color: #fff;
+
+  cursor: pointer;
+
+  font-size: 20px;
+}
+
+.gacha-button:hover:not(:disabled) {
+  background: #ff85c2;
+}
+
+.gacha-button:active:not(:disabled) {
+  background: #e85a9f;
+}
+
+.gacha-button:disabled {
+  opacity: 0.45;
+
+  cursor: not-allowed;
+}
+
+.gacha-button:hover:not(:disabled) {
+  background: #555;
+}
+
+.gacha-button:disabled {
+  opacity: 0.45;
+
+  cursor: not-allowed;
+}
+
+/* ================================
+   Overlay URL
+================================ */
+
+.overlay-copy-button {
+  display: block;
+
+  width: 100%;
+
+  height: 42px;
+
+  margin-top: 10px;
+
+  background: #252525;
+
+  border: 1px solid #444;
+
+  border-radius: 6px;
+
+  color: #fff;
+
+  cursor: pointer;
+
+  font-size: 14px;
+}
+
+.overlay-copy-button:hover {
+  background: #333;
+}
+
+/* ================================
+   配信用画面
+================================ */
+
+.preview-container {
+  position: relative;
+
+  width: 100%;
+
+  aspect-ratio: 16 / 9;
+
+  background: transparent;
+
+  border-radius: 8px;
+
+  overflow: hidden;
+}
+
+.preview-video {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+
+  background: transparent;
+}
+
+.preview-result {
+  position: absolute;
+
+  z-index: 20;
+
+  color: #000;
+
+  white-space: nowrap;
+
+  opacity: 0;
+
+  pointer-events: none;
+
+  transition: opacity 0.15s ease;
+}
+
+.preview-result.visible {
+  opacity: 1;
+}
+
+/* ================================
+   画面が狭い場合
+================================ */
+
+@media (max-width: 1000px) {
+  .screen-wrapper {
+    flex-direction: column;
+
+    align-items: center;
+  }
+
+  .screen-section {
+    flex: none;
+
+    width: 100%;
+
+    max-width: 700px;
+  }
+}
+
+/* ================================
+   小さい画面
+================================ */
+
+@media (max-width: 600px) {
+  .screen-wrapper {
+    padding: 15px;
+  }
+
+  .screen-section {
+    padding: 12px;
+  }
+
+  .result-setting-row {
+    gap: 5px;
+  }
+
+  .result-number {
+    flex: 0 0 20px;
+  }
+
+  .result-probability-input {
+    flex: 0 0 60px;
+
+    width: 60px;
+  }
+
+  .result-delete-button {
+    padding: 0 6px;
+  }
+}
