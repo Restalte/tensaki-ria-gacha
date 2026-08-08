@@ -5,7 +5,7 @@ const { WebSocketServer } = require("ws");
 
 const app = express();
 
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 /*
  * ========================================
@@ -181,15 +181,15 @@ server.listen(
     );
 
     console.log(
-      `操作画面: http://localhost:${PORT}/`
+      `ポート: ${PORT}`
     );
 
     console.log(
-      `Overlay: http://localhost:${PORT}/overlay`
+      `Overlay: /overlay`
     );
 
     console.log(
-      `WebSocket: ws://localhost:${PORT}/ws`
+      `WebSocket: /ws`
     );
 
     console.log(
