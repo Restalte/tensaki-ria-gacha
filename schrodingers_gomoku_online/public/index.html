@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>シュレディンガーの五目並べ</title>
+<style>
+:root{--bg:#06101f;--panel:#0a1b30;--line:#1765a7;--cyan:#28b8ff;--text:#eaf4ff;--muted:#a7bfd7}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#12345a 0,#06101f 52%,#020712 100%);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 22px;border-bottom:1px solid #164875;flex-wrap:wrap}
+h1{font-size:clamp(24px,3vw,38px);margin:0;letter-spacing:.06em}header p{margin:4px 0 0;color:#9cc9ee}
+.status{border:1px solid var(--cyan);border-radius:12px;padding:10px 16px;background:#071d34;text-align:center;min-width:190px}.status strong{display:block;font-size:19px;color:#7bd5ff}
+main{display:grid;grid-template-columns:minmax(220px,280px) minmax(320px,1fr) minmax(240px,310px);gap:14px;padding:14px;max-width:1600px;margin:auto}
+.panel{background:linear-gradient(145deg,#0a1c32,#061120);border:1px solid #1a639e;border-radius:12px;padding:14px;box-shadow:0 0 16px #007dff14}
+h2{font-size:17px;margin:0 0 12px;border-bottom:1px solid #22415f;padding-bottom:9px}
+.player{border:1px solid #244d72;border-radius:10px;padding:12px;margin-bottom:12px}.player.active{border-color:#32baff;box-shadow:0 0 14px #149cff45}.player h3{margin:0 0 6px;font-size:16px}.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1px solid #385d7c;background:#0a1524;color:var(--text);border-radius:9px;padding:8px 10px;cursor:pointer;flex:1;min-width:88px}.chip.selected{border-color:#53c6ff;background:#07385e;box-shadow:0 0 10px #1ca8ff55}.chip:disabled{opacity:.4;cursor:not-allowed}.prob{display:block;font-size:20px;font-weight:750}.hint{font-size:12px;color:var(--muted);line-height:1.5}.state-key{display:flex;align-items:center;gap:10px;margin:9px 0;font-size:14px}
+.stone{width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;flex-shrink:0;border:1px solid #b8dfff}
+.black{background:radial-gradient(circle at 30% 25%,#687b8f,#10141a 58%,#020305);box-shadow:inset -3px -4px 7px #0009}
+.white{background:radial-gradient(circle at 30% 25%,white,#d7e0e8 55%,#8899a8);box-shadow:inset -2px -3px 6px #50607055}
+.unknown{background:#07162a;color:white;border:2px solid #49bdff;box-shadow:0 0 10px #1e9dff;font-weight:800}
+.board-wrap{padding:10px;background:linear-gradient(135deg,#d5a36c,#f1cc98 48%,#b9834f);border-radius:14px;box-shadow:0 8px 25px #0008;align-self:start}
+#board{display:block;width:100%;aspect-ratio:1;background-color:#d8ad79;background-image:linear-gradient(to right,#684522 1px,transparent 1px),linear-gradient(to bottom,#684522 1px,transparent 1px);background-size:calc(100% / 14) calc(100% / 14);background-position:0 0;border:0;position:relative;overflow:visible}
+.cell{border:0;background:transparent;position:absolute;width:6.6666667%;height:6.6666667%;padding:0;cursor:pointer;z-index:1;border-radius:50%;transform:translate(-50%,-50%)}
+.cell:hover{background:#ffffff55}
+.cell .stone{position:absolute;width:82%;height:82%;left:9%;top:9%;z-index:2}
+.cell .stone.unknown{font-size:clamp(9px,1.1vw,16px)}
+.cell .stone .prob-label{font-size:clamp(8px,1vw,14px);font-weight:800;color:#fff;text-shadow:0 1px 3px #000;line-height:1}
+.cell .stone.unknown.p90{background:radial-gradient(circle at 30% 25%,#4a4a4a,#10141a 62%,#020305);border-color:#555}
+.cell .stone.unknown.p70{background:radial-gradient(circle at 30% 25%,#666,#222 62%,#070707);border-color:#777}
+.cell .stone.unknown.p30{background:radial-gradient(circle at 30% 25%,#999,#555 62%,#202020);border-color:#aaa}
+.cell .stone.unknown.p10{background:radial-gradient(circle at 30% 25%,#c8c8c8,#888 62%,#444);border-color:#ddd}
+.cell .stone.black .prob-label{color:#fff}
+.cell .stone.black{background:radial-gradient(circle at 30% 25%,#59616b,#080a0d 58%,#000 100%);border:2px solid #050505;box-shadow:inset -3px -4px 7px #0009,0 1px 3px #0008}
+.cell .stone.white{background:radial-gradient(circle at 30% 25%,#fff,#f1f1f1 55%,#c7c7c7 100%);border:2px solid #777;box-shadow:inset -2px -3px 6px #50607055,0 1px 3px #0008}
+.cell .stone.black .prob-label{color:#fff;text-shadow:0 1px 3px #000}
+.cell .stone.white .prob-label{color:#111;text-shadow:0 1px 2px #fff}
+.cell.last{outline:2px solid #27b8ff;outline-offset:-3px}
+#winLine{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible}
+.win-screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:#02071255;z-index:100;padding:12px;pointer-events:none}
+.win-screen.show{display:flex}
+.win-card{width:min(320px,88vw);padding:15px 16px;border:2px solid #ffe16b;border-radius:16px;background:linear-gradient(145deg,#102944ee,#050b16ee);box-shadow:0 0 24px #ffd84a44;text-align:center;animation:winpop .35s ease-out;pointer-events:auto}
+.win-card h2{font-size:clamp(22px,4vw,30px);border:0;margin:0 0 6px;color:#ffe16b}
+.win-card p{font-size:14px;margin:0 0 12px}.win-card .win-hint{font-size:11px;opacity:.8;margin-top:-5px}
+@keyframes winpop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.cell.win .stone{box-shadow:0 0 0 3px #ffe16b,0 0 14px #ffe16b}
+.actions{display:grid;gap:9px}.primary,.secondary{border:1px solid #258fd5;border-radius:10px;padding:13px;background:linear-gradient(135deg,#0759a4,#087fc9);color:white;font-weight:800;font-size:17px;cursor:pointer}.secondary{background:#10263c;font-size:14px}.primary:disabled,.secondary:disabled{opacity:.4;cursor:not-allowed}
+.log{font-size:13px;line-height:1.6;max-height:270px;overflow:auto}.log div{padding:7px 0;border-bottom:1px solid #17324d}
+.message{margin:0 14px 14px;padding:12px 16px;border:1px solid #1b6095;border-radius:10px;background:#07182a;color:#c9e8ff}
+@media(max-width:1000px){main{grid-template-columns:1fr 1fr}.board-panel{grid-column:1/-1;grid-row:1}.left-panel{grid-column:1}.right-panel{grid-column:2}}
+@media(max-width:650px){main{grid-template-columns:1fr;padding:8px}.board-panel,.left-panel,.right-panel{grid-column:1;grid-row:auto}header{padding:14px}.board-wrap{padding:5px}.panel{padding:11px}}
+</style>
+<script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+<header>
+ <div><h1>⚛ シュレディンガーの五目並べ</h1><p>観測で決まる、もうひとつの五目</p></div>
+ <div class="status"><span id="turnLabel">先攻（黒）</span><strong id="statusText">石を置いてください</strong></div>
+</header>
+<main>
+ <section class="panel left-panel">
+  <h2>プレイヤーと石</h2>
+  <button class="secondary" id="cpuBtn" style="width:100%;margin-bottom:8px">CPU対戦：OFF（2人対戦）</button>
+  <div class="online-box" style="border:1px solid #2b7db4;border-radius:10px;padding:10px;margin-bottom:14px">
+   <h3 style="margin:0 0 8px;font-size:15px">オンライン対戦</h3>
+   <button class="secondary" id="createRoomBtn" style="width:100%;margin-bottom:6px">部屋を作る（先攻）</button>
+   <button class="secondary" id="joinRoomBtn" style="width:100%;margin-bottom:6px">部屋番号で参加（後攻）</button>
+   <div id="onlineStatus" class="hint">サーバーに接続していません</div>
+   <button class="secondary" id="leaveRoomBtn" style="width:100%;margin-top:7px" disabled>オンライン対戦を退出</button>
+  </div>
+  <div class="player active" id="blackPlayer"><h3>先攻（黒を狙う）</h3><div class="chips"><button class="chip selected" data-prob="90"><span class="prob">90%</span><span class="hint">黒になる確率</span></button><button class="chip" data-prob="70"><span class="prob">70%</span><span class="hint">黒になる確率</span></button></div><p class="hint">黒の確率が高い石を選んで配置します。</p></div>
+  <div class="player" id="whitePlayer"><h3>後攻（白を狙う）</h3><div class="chips"><button class="chip" data-prob="30"><span class="prob">30%</span><span class="hint">黒になる確率</span></button><button class="chip" data-prob="10"><span class="prob">10%</span><span class="hint">黒になる確率</span></button></div><p class="hint">黒になる確率が低い石で白を狙います。</p></div>
+  <p class="hint">石には黒になる確率の数字（90・70・30・10）が表示されます。同じプレイヤーは連続する自分のターンで、同じ確率の石を置けません。</p>
+  <h2 style="margin-top:18px">石の状態</h2>
+  <div class="state-key"><span class="stone unknown">?</span>未確定（量子状態）</div>
+  <div class="state-key"><span class="stone black"></span>黒（観測結果）</div>
+  <div class="state-key"><span class="stone white"></span>白（観測結果）</div>
+ </section>
+ <section class="board-panel">
+  <div class="board-wrap"><div id="board" aria-label="15×15の五目並べ盤面"><svg id="winLine" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div></div>
+  <p class="hint" style="color:#d6eaff;margin:10px 4px">15×15の交点に配置・縦／横／斜めに同色が5個以上並ぶと勝利</p>
+ </section>
+ <section class="panel right-panel">
+  <h2>観測回数</h2>
+  <div class="player"><h3>先攻（黒）</h3><strong id="blackCount">0 / 5 回</strong></div>
+  <div class="player"><h3>後攻（白）</h3><strong id="whiteCount">0 / 5 回</strong></div>
+  <div class="actions">
+   <button class="primary" id="observeBtn">◉ 観測する</button>
+   <button class="secondary" id="passBtn">観測せずに手番を終える</button>
+   <button class="secondary" id="resetBtn">最初からやり直す</button>
+  </div>
+  <p class="hint">観測すると盤上の全ての未確定石が、それぞれの確率で黒／白に確定します。五目がなければ結果を戻して再抽選します。</p>
+  <h2 style="margin-top:18px">ゲームログ</h2><div id="log" class="log"></div>
+ </section>
+</main>
+<div class="win-screen" id="winScreen" role="dialog" aria-modal="true" aria-labelledby="winTitle">
+ <div class="win-card">
+  <h2 id="winTitle">勝利！</h2>
+  <p id="winText">五目が完成しました。</p>
+  <p class="win-hint">盤面と五目の位置を確認してください。</p>
+  <button class="primary" id="winResetBtn">確認して再スタート</button>
+ </div>
+</div>
+<div class="message" id="message">先攻の手番です。90%または70%の石を選び、盤面の線が交差する点に置いてください。</div>
+<script>
+const SIZE=15;
+let board=[], turn='black', selected={black:90,white:30}, counts={black:0,white:0}, lastPlaced={black:null,white:null}, finished=false, last=null, moveNo=0, cpuMode=false, cpuBusy=false;
+let onlineMode=false, myColor=null, roomCode=null, socket=null, onlineConnected=false, onlineWinnerLines=[];
+const $=id=>document.getElementById(id);
+const boardEl=$('board');
+function init(){
+ board=Array.from({length:SIZE},()=>Array(SIZE).fill(null));turn='black';selected={black:90,white:30};counts={black:0,white:0};lastPlaced={black:null,white:null};finished=false;last=null;moveNo=0;cpuBusy=false;
+ // Selected chip styling is set by render().
+ boardEl.innerHTML='<svg id="winLine" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>';
+ for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){const b=document.createElement('button');b.className='cell';b.style.left=(c/14*100)+'%';b.style.top=(r/14*100)+'%';b.title=`${r+1}行 ${c+1}列`;b.setAttribute('aria-label',b.title);b.addEventListener('click',()=>place(r,c));boardEl.appendChild(b)}
+ $('winScreen').classList.remove('show');
+ $('log').innerHTML='';log('ゲーム開始。先攻（黒）から石を置きます。');render();
+}
+function log(s){const d=document.createElement('div');d.textContent=s;$('log').prepend(d)}
+function place(r,c){
+ if(onlineMode){if(!finished&&myColor===turn&&!board[r][c])socket.emit('game-action',{room:roomCode,action:{type:'place',r,c,p:selected[turn]}});return}
+ if(finished||board[r][c]||(cpuMode&&(turn==='white'||cpuBusy)))return;
+ // A new placement begins the next quantum round: previous observation colors reset.
+ for(let rr=0;rr<SIZE;rr++)for(let cc=0;cc<SIZE;cc++)if(board[rr][cc])board[rr][cc].color=null;
+ const p=selected[turn];
+ if(lastPlaced[turn]===p){setMessage(`連続ターンでは同じ確率の石（${p}）を置けません。左の石ボタンから別の確率を選んでください。`);return}
+ board[r][c]={p,owner:turn,color:null};last=[r,c];lastPlaced[turn]=p;moveNo++;
+ log(`${turn==='black'?'先攻（黒）':'後攻（白）'}が黒確率${p}%の石を配置（${r+1}行 ${c+1}列）`);
+ const mover=turn;
+ const options=mover==='black'?[90,70]:[30,10];
+ selected[mover]=options.find(v=>v!==p) ?? p;
+ turn=turn==='black'?'white':'black';render();if(cpuMode&&turn==='white'&&!finished){cpuBusy=true;setTimeout(cpuMove,350)}
+}
+function cpuMove(){
+ if(!cpuMode||finished||turn!=='white'){cpuBusy=false;return}
+ // CPUは白の確率を交互に使う（30→10→30…）。
+ const p=lastPlaced.white===30?10:30;
+ selected.white=p;
+ const moves=[];
+ for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(!board[r][c])moves.push([r,c]);
+ if(!moves.length){setMessage('盤面が埋まりました。最初からやり直してください。');cpuBusy=false;return}
+
+ // 五連候補を全方向から列挙。石は観測ごとに再抽選されるため、
+ // 固定の色ではなく各石の黒・白確率を使って評価する。
+ const windows=[];
+ const dirs=[[1,0],[0,1],[1,1],[1,-1]];
+ for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)for(const [dr,dc] of dirs){
+  const cells=[];
+  for(let k=0;k<5;k++){
+   const rr=r+dr*k,cc=c+dc*k;
+   if(rr<0||rr>=SIZE||cc<0||cc>=SIZE){cells.length=0;break}
+   cells.push([rr,cc]);
+  }
+  if(cells.length===5)windows.push(cells);
+ }
+ const probBlack=stone=>stone.p/100;
+ const probWhite=stone=>1-stone.p/100;
+ function scoreMove(r,c){
+  const candidate={p,owner:'white',color:null};
+  board[r][c]=candidate;
+  let score=0;
+  for(const cells of windows){
+   if(!cells.some(([rr,cc])=>rr===r&&cc===c))continue;
+   let occupied=0, pb=1,pw=1,hasBlackOwner=false,hasWhiteOwner=false;
+   for(const [rr,cc] of cells){
+    const st=board[rr][cc];
+    if(!st)continue;
+    occupied++;pb*=probBlack(st);pw*=probWhite(st);
+    if(st.owner==='black')hasBlackOwner=true;
+    if(st.owner==='white')hasWhiteOwner=true;
+   }
+   if(occupied<2)continue;
+   // 完成済み五連の期待値を最重視。未完成の窓も、あと何石で完成するかに応じて評価。
+   const empty=5-occupied;
+   const urgency=occupied===5?160000:occupied===4?9000:occupied===3?620:occupied===2?42:3;
+   const futureFactor=occupied===5?1:Math.pow(0.43,empty);
+   // 白の成立期待値は加点、黒の成立期待値は強く減点して防御を優先。
+   score += urgency*futureFactor*pw*1.35;
+   score -= urgency*futureFactor*pb*1.55;
+   // 相手がすでに複数置いている線を潰す価値を加える。
+   if(hasBlackOwner&&occupied>=3)score-=occupied*13*pb;
+   if(hasWhiteOwner&&occupied>=3)score+=occupied*9*pw;
+  }
+  // 開幕は中央寄り、以降は既存の石に近い交点を優先。孤立手を避ける。
+  const centerDist=Math.abs(r-7)+Math.abs(c-7);
+  score += Math.max(0,18-centerDist)*0.9;
+  let neighbors=0,nearWhite=0,nearBlack=0;
+  for(let dr=-2;dr<=2;dr++)for(let dc=-2;dc<=2;dc++){
+   if(!dr&&!dc)continue;
+   const rr=r+dr,cc=c+dc;
+   if(rr<0||rr>=SIZE||cc<0||cc>=SIZE||!board[rr][cc])continue;
+   const dist=Math.abs(dr)+Math.abs(dc);
+   neighbors+=1/(dist+0.5);
+   if(board[rr][cc].owner==='white')nearWhite+=1/(dist+0.5);
+   else nearBlack+=1/(dist+0.5);
+  }
+  score+=neighbors*2.1+nearWhite*2.4+nearBlack*1.5;
+  board[r][c]=null;
+  return score;
+ }
+ let best=-Infinity,bestMoves=[];
+ for(const [r,c] of moves){
+  const sc=scoreMove(r,c);
+  if(sc>best+1e-7){best=sc;bestMoves=[[r,c]]}
+  else if(Math.abs(sc-best)<=1e-7)bestMoves.push([r,c]);
+ }
+ // 同点なら少しだけランダム性を残す。
+ const [r,c]=bestMoves[Math.floor(Math.random()*bestMoves.length)];
+ board[r][c]={p,owner:'white',color:null};last=[r,c];lastPlaced.white=p;moveNo++;
+ log(`CPU（白・戦略AI）が黒確率${p}の石を配置（${r+1}行 ${c+1}列）`);
+ turn='black';cpuBusy=false;render();
+ setMessage('あなたの手番です。CPUは五連の期待値・相手の脅威・中央と連結性を評価して配置しました。');
+}
+function hasFive(color){
+ const dirs=[[1,0],[0,1],[1,1],[1,-1]];
+ for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++)if(board[r][c]?.color===color){
+  for(const [dr,dc] of dirs){let cells=[[r,c]],rr=r+dr,cc=c+dc;while(rr>=0&&rr<SIZE&&cc>=0&&cc<SIZE&&board[rr][cc]?.color===color){cells.push([rr,cc]);rr+=dr;cc+=dc}rr=r-dr;cc=c-dc;while(rr>=0&&rr<SIZE&&cc>=0&&cc<SIZE&&board[rr][cc]?.color===color){cells.unshift([rr,cc]);rr-=dr;cc-=dc}if(cells.length>=5)return cells}
+ }return null;
+}
+function observe(){
+ if(onlineMode){if(!finished&&myColor===turn)socket.emit('game-action',{room:roomCode,action:{type:'observe'}});return}
+ if(finished)return;
+ if(counts[turn]>=5){setMessage('このプレイヤーは観測回数を使い切っています。手番を終えるか、石を置いてください。');return}
+ counts[turn]++;const actor=turn;
+ for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){const s=board[r][c];if(s)s.color=Math.random()*100<s.p?'black':'white'}
+ const blackLine=hasFive('black'),whiteLine=hasFive('white');
+ log(`${actor==='black'?'先攻（黒）':'後攻（白）'}が観測（${counts[actor]}/5回）。盤上の石を黒または白で表示しました。`);
+ if(blackLine&&whiteLine){
+  finished=true;highlight([...blackLine,...whiteLine]);const msg=`黒・白の両方が五目！ 観測した${actor==='black'?'先攻（黒）':'後攻（白）'}の勝ち！`;setMessage(msg);showWin(msg);log('両色が五目。観測者の勝利！');
+ }else if(blackLine||whiteLine){
+  finished=true;const winner=blackLine?'黒':'白';highlight(blackLine||whiteLine);const msg=`${winner==='黒'?'黒（先攻）':'白（後攻）'}が五目！ ${winner==='黒'?'先攻':'後攻'}の勝ち！`;setMessage(msg);showWin(msg);log(`${winner}が五目。${winner==='黒'?'先攻':'後攻'}の勝利！`);
+ }else{
+  setMessage('観測結果：今回は五目なし。石の色は表示したままです。次に石を置くと未確定状態に戻り、次の観測では再抽選されます。');
+  log('五目なし。観測結果の色を表示しています。次の配置時に未確定状態へ戻します。');
+ }
+ render();
+}
+function highlight(lines){
+ document.querySelectorAll('.cell').forEach(x=>x.classList.remove('win'));
+ const unique=[...new Map(lines.map(([r,c])=>[r+','+c,[r,c]])).values()];
+ for(const [r,c] of unique)boardEl.querySelectorAll('.cell')[r*SIZE+c].classList.add('win');
+ const svg=$('winLine');svg.innerHTML='';
+ // Draw a clear gold line through the center of the winning five (or longer) stones.
+ const pts=unique.map(([r,c])=>({x:c/14*100,y:r/14*100}));
+ let a=pts[0],b=pts[pts.length-1];
+ if(pts.length>1){
+  const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;
+  const ux=dx/len,uy=dy/len;
+  a={x:a.x-ux*2.1,y:a.y-uy*2.1};b={x:b.x+ux*2.1,y:b.y+uy*2.1};
+  const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+  line.setAttribute('x1',a.x);line.setAttribute('y1',a.y);line.setAttribute('x2',b.x);line.setAttribute('y2',b.y);
+  line.setAttribute('stroke','#ffdf45');line.setAttribute('stroke-width','2.25');line.setAttribute('stroke-linecap','round');line.setAttribute('vector-effect','non-scaling-stroke');
+  line.style.filter='drop-shadow(0 0 2px #ffb700)';svg.appendChild(line);
+ }
+}
+function showWin(msg){$('winText').textContent=msg;$('winScreen').classList.add('show')}
+function passTurn(){if(onlineMode){if(!finished&&myColor===turn)socket.emit('game-action',{room:roomCode,action:{type:'pass'}});return}if(finished)return;log(`${turn==='black'?'先攻（黒）':'後攻（白）'}が観測せずに手番を終了`);turn=turn==='black'?'white':'black';render();if(cpuMode&&turn==='white'&&!finished){cpuBusy=true;render();setTimeout(cpuMove,350)}}
+function setMessage(s){$('message').textContent=s}
+function render(){
+ $('turnLabel').textContent=turn==='black'?'先攻（黒）の手番':(cpuMode?'CPU（白）の手番':'後攻（白）の手番');
+ $('statusText').textContent=finished?'ゲーム終了':'石を置く／観測';
+ $('blackCount').textContent=`${counts.black} / 5 回`;$('whiteCount').textContent=`${counts.white} / 5 回`;
+ $('blackPlayer').classList.toggle('active',turn==='black');$('whitePlayer').classList.toggle('active',turn==='white');
+ document.querySelectorAll('.chip').forEach(b=>{const p=Number(b.dataset.prob),belongs=turn==='black'?[90,70]:[30,10];b.disabled=finished||(onlineMode&&myColor!==turn)||!belongs.includes(p)||lastPlaced[turn]===p;b.classList.toggle('selected',selected[turn]===p&&belongs.includes(p))});
+ [...boardEl.querySelectorAll('.cell')].forEach((el,i)=>{const r=Math.floor(i/SIZE),c=i%SIZE,s=board[r][c];el.innerHTML='';el.classList.toggle('last',!!last&&last[0]===r&&last[1]===c);if(s){const stone=document.createElement('span');stone.className='stone '+(s.color||'unknown');stone.classList.add('p'+s.p);const label=document.createElement('span');label.className='prob-label';label.textContent=String(s.p);stone.appendChild(label);el.appendChild(stone);el.title=`${r+1}行 ${c+1}列・黒確率${s.p}%`}});
+ $('observeBtn').disabled=finished||counts[turn]>=5||!board.some(row=>row.some(Boolean))||(cpuMode&&turn==='white')||cpuBusy||(onlineMode&&myColor!==turn);
+ $('passBtn').disabled=finished||(cpuMode&&turn==='white')||cpuBusy||(onlineMode&&myColor!==turn);$('resetBtn').disabled=false;$('cpuBtn').textContent=cpuMode?'CPU対戦：ON（あなた＝黒／CPU＝白）':'CPU対戦：OFF（2人対戦）';
+}
+document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{const p=Number(b.dataset.prob),allowed=turn==='black'?[90,70]:[30,10];if(allowed.includes(p)&&(!onlineMode||myColor===turn)){selected[turn]=p;render()}}));
+$('observeBtn').addEventListener('click',observe);$('passBtn').addEventListener('click',passTurn);$('resetBtn').addEventListener('click',init);$('winResetBtn').addEventListener('click',()=>{if(onlineMode){setMessage('オンライン対戦は、退出して新しい部屋を作ってください。');return}init()});$('cpuBtn').addEventListener('click',()=>{if(onlineMode)return;cpuMode=!cpuMode;init();setMessage(cpuMode?'CPU対戦です。あなたは先攻（黒）です。':'2人対戦です。先攻（黒）から始めます。');render()});
+
+function setOnlineStatus(text){$('onlineStatus').textContent=text}
+function connectSocket(){
+ if(socket&&socket.connected)return;
+ if(typeof io==='undefined'){setOnlineStatus('Socket.IOを読み込めません。サーバー経由でページを開いてください。');return}
+ if(!socket){
+  socket=io();
+  socket.on('connect',()=>{onlineConnected=true;setOnlineStatus('サーバー接続済み。部屋を作るか参加してください。');$('createRoomBtn').disabled=false;$('joinRoomBtn').disabled=false});
+  socket.on('disconnect',()=>{onlineConnected=false;setOnlineStatus('サーバーから切断されました。再接続を試しています…')});
+  socket.on('room-created',data=>{roomCode=data.room;myColor='black';onlineMode=true;cpuMode=false;init();$('cpuBtn').disabled=true;setOnlineStatus(`部屋番号：${roomCode}（あなたは先攻・黒）。友達に番号を伝えてね。`);$('leaveRoomBtn').disabled=false});
+  socket.on('room-joined',data=>{roomCode=data.room;myColor='white';onlineMode=true;cpuMode=false;init();$('cpuBtn').disabled=true;setOnlineStatus(`部屋番号：${roomCode}（あなたは後攻・白）。`);$('leaveRoomBtn').disabled=false});
+  socket.on('room-error',data=>{setOnlineStatus(data.message||'部屋に参加できませんでした')});
+  socket.on('room-state',state=>{
+   if(!onlineMode){onlineMode=true;roomCode=state.room;cpuMode=false;$('cpuBtn').disabled=true;$('leaveRoomBtn').disabled=false}
+   board=state.board;turn=state.turn;selected=state.selected;counts=state.counts;lastPlaced=state.lastPlaced;finished=state.finished;last=state.last;moveNo=state.moveNo;
+   onlineWinnerLines=state.winningLines||[];
+   render();
+   if(onlineWinnerLines.length)highlight(onlineWinnerLines);
+   else {const svg=$('winLine');if(svg)svg.innerHTML='';document.querySelectorAll('.cell').forEach(x=>x.classList.remove('win'))}
+   if(state.message)setMessage(state.message);
+   $('turnLabel').textContent=turn==='black'?'先攻（黒）の手番':'後攻（白）の手番';
+   $('statusText').textContent=finished?'ゲーム終了':(myColor===turn?'あなたの手番':'相手の手番');
+   setOnlineStatus(`部屋番号：${roomCode} ／ ${state.players===2?'対戦相手が接続中':'相手の参加を待っています'}${myColor===turn?' ／ あなたの手番':' ／ 相手の手番'}`);
+   if(finished&&state.message)showWin(state.message);
+  });
+  socket.on('room-left',()=>{onlineMode=false;myColor=null;roomCode=null;onlineWinnerLines=[];$('cpuBtn').disabled=false;$('leaveRoomBtn').disabled=true;setOnlineStatus('オンライン対戦を退出しました');init()});
+  socket.on('action-error',data=>setMessage(data.message||'操作できませんでした'));
+ }
+}
+$('createRoomBtn').addEventListener('click',()=>{connectSocket();if(socket&&socket.connected)socket.emit('create-room')});
+$('joinRoomBtn').addEventListener('click',()=>{connectSocket();const code=prompt('友達から教えてもらった部屋番号を入力してください');if(code&&socket&&socket.connected)socket.emit('join-room',{room:String(code).trim().toUpperCase()})});
+$('leaveRoomBtn').addEventListener('click',()=>{if(socket&&roomCode)socket.emit('leave-room',{room:roomCode})});
+
+init();
+connectSocket();
+</script>
+</body></html>
